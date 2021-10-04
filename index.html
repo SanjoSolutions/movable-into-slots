@@ -2,40 +2,115 @@
 <html>
 <head>
 <style>
+body {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.5rem;
+  min-height: 100vh;
+}
+
+.box, .box-placing-preview {
+  box-sizing: border-box;
+  width: 24rem;
+  height: 12rem;
+}
+
 .box {
 	border: 1px solid black;
-	width: 24rem;
-	height: 12rem;
 	background-color: #fcfcfc;
 	cursor: move;
+  z-index: 2;
+}
+
+.box-placing-preview {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 2px dashed lightgray;
+  z-index: 1;
+  display: none;
 }
 </style>
 </head>
 <body>
 <div class="box"></div>
+<div class="box-placing-preview"></div>
 <script>
 const $box = document.querySelector('.box')
+const $boxPlacingPreview = document.querySelector('.box-placing-preview')
 const {width: boxWidth, height: boxHeight} = $box.getBoundingClientRect()
 
 let isMoving = false
 
-$box.addEventListener('pointerdown', function () {
+function getBoxPosition() {
+  return getPosition($box)
+}
+
+function setBoxPosition({ x, y }) {
+  setPosition($box, { x, y })
+}
+
+function setBoxPlacingPreviewPosition({ x, y }) {
+  setPosition($boxPlacingPreview, {x, y})
+}
+
+$box.addEventListener('pointerdown', function (event) {
+  event.preventDefault()
 	isMoving = true
 	$box.style.position = 'absolute'
+
+  const position = getBoxPosition()
+  setBoxPlacingPreviewPosition(position)
+  $boxPlacingPreview.style.display = 'block'
 })
 
 window.addEventListener('pointermove', function (event) {
 	if (isMoving) {
-		const x = Math.min(Math.max(0, $box.offsetLeft + event.movementX), window.innerWidth - boxWidth)
-		const y = Math.min(Math.max(0, $box.offsetTop + event.movementY), window.innerHeight - boxHeight)
-		$box.style.left = x + 'px'
-		$box.style.top = y + 'px'
+    const boxPosition = getBoxPosition()
+		const x = Math.min(Math.max(0, boxPosition.x + event.movementX), window.innerWidth - boxWidth)
+		const y = Math.min(Math.max(0, boxPosition.y + event.movementY), window.innerHeight - boxHeight)
+    setBoxPosition({x, y})
+
+    const snapPosition = calculateSnapPosition({x, y, width: boxWidth, height: boxHeight})
+    setBoxPlacingPreviewPosition(snapPosition)
 	}
 })
 
 window.addEventListener('pointerup', function () {
 	isMoving = false
+  $boxPlacingPreview.style.display = null
+
+  const {x, y} = getBoxPosition()
+
+  const snapPosition = calculateSnapPosition({ x, y, width: boxWidth, height: boxHeight })
+
+  setBoxPosition(snapPosition)
 })
+
+function calculateSnapPosition({ x, y, width, height }) {
+  const computedStyles = getComputedStyle(document.body)
+  const paddingLeft = parseInt(computedStyles.paddingLeft, 10)
+  const paddingTop = parseInt(computedStyles.paddingTop, 10)
+  const cx = x + width / 2
+  const cy = y + height / 2
+  return {
+    x: paddingLeft + Math.floor((cx - paddingLeft) / width) * width,
+    y: paddingTop + Math.floor((cy - paddingTop) / height) * height
+  }
+}
+
+function getPosition(element) {
+  return {
+    x: element.offsetLeft,
+    y: element.offsetTop
+  }
+}
+
+function setPosition(element, { x, y }) {
+  element.style.left = x + 'px'
+  element.style.top = y + 'px'
+}
+
 </script>
 </body>
 </html>
