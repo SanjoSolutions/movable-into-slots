@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+<style>
+.box {
+	border: 1px solid black;
+	width: 24rem;
+	height: 12rem;
+	background-color: #fcfcfc;
+	cursor: move;
+}
+</style>
+</head>
+<body>
+<div class="box"></div>
+<script>
+const $box = document.querySelector('.box')
+const {width: boxWidth, height: boxHeight} = $box.getBoundingClientRect()
+
+let isMoving = false
+
+$box.addEventListener('pointerdown', function () {
+	isMoving = true
+	$box.style.position = 'absolute'
+})
+
+window.addEventListener('pointermove', function (event) {
+	if (isMoving) {
+		const x = Math.min(Math.max(0, $box.offsetLeft + event.movementX), window.innerWidth - boxWidth)
+		const y = Math.min(Math.max(0, $box.offsetTop + event.movementY), window.innerHeight - boxHeight)
+		$box.style.left = x + 'px'
+		$box.style.top = y + 'px'
+	}
+})
+
+window.addEventListener('pointerup', function () {
+	isMoving = false
+})
+</script>
+</body>
+</html>
