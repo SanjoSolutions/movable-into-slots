@@ -88,14 +88,23 @@
       })
 
       function calculateSnapPosition({ x, y, width, height }) {
-        const computedStyles = getComputedStyle(document.body)
-        const paddingLeft = parseInt(computedStyles.paddingLeft, 10)
+        const $container = document.body
+        const computedStyles = getComputedStyle($container)
         const paddingTop = parseInt(computedStyles.paddingTop, 10)
+        const paddingRight = parseInt(computedStyles.paddingRight, 10)
+        const paddingBottom = parseInt(computedStyles.paddingBottom, 10)
+        const paddingLeft = parseInt(computedStyles.paddingLeft, 10)
         const cx = x + width / 2
         const cy = y + height / 2
+        const containerWidth = $container.clientWidth - paddingLeft - paddingRight
+        const containerHeight = $container.clientHeight - paddingTop - paddingBottom
+        const maxRow = Math.floor(containerHeight / height) - 1
+        const maxColumn = Math.floor(containerWidth / width) - 1
+        const row = Math.min(Math.max(0, Math.floor((cy - paddingTop) / height)), maxRow)
+        const column = Math.min(Math.max(0, Math.floor((cx - paddingLeft) / width)), maxColumn)
         return {
-          x: paddingLeft + Math.floor((cx - paddingLeft) / width) * width,
-          y: paddingTop + Math.floor((cy - paddingTop) / height) * height,
+          x: paddingLeft + column * width,
+          y: paddingTop + row * height,
         }
       }
 
